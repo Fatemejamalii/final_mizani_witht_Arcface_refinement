@@ -95,6 +95,7 @@ class TrainArgs(BaseArgs):
         self.parser.add_argument('--dataset_path', type=str, default='../my_dataset')
         self.parser.add_argument('--celeba_path' , type=str)
         self.parser.add_argument('--wich_dataset' , type=str)
+        self.parser.add_argument('--initial_epoch' , type=int, default=0)
 
         self.parser.add_argument('--num_epochs', type=int, default=math.inf)
         self.parser.add_argument('--cross_frequency', type=int, default=3,
