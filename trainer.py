@@ -27,7 +27,6 @@ class Trainer(object):
         self.model = model
         self.data_loader = data_loader
 
-        self.attr_test, self.id_test, self.mask_test, self.real_w_test, self.real_test, self.matching_ws_test = self.data_loader.get_batch(is_cross=False)
         # lrs & optimizers
         lr = 5e-5 if self.args.resolution == 256 else 1e-5
 
@@ -52,7 +51,7 @@ class Trainer(object):
 
         self.pixel_mask = tf.broadcast_to(self.pixel_mask, [self.args.batch_size, *self.pixel_mask.shape])
 
-        self.num_epoch = 29000
+        self.num_epoch = args.initial_epoch
         self.is_cross_epoch = False
 
         # Lambdas
@@ -80,10 +79,10 @@ class Trainer(object):
 
             if self.args.cross_frequency and (self.num_epoch % self.args.cross_frequency == 0):
                 self.is_cross_epoch = True
-                self.logger.info('This epoch is cross-face')
+#                 self.logger.info('This epoch is cross-face')
             else:
                 self.is_cross_epoch = False
-                self.logger.info('This epoch is same-face')
+#                 self.logger.info('This epoch is same-face')
 
             try:
                 if self.num_epoch % self.args.test_frequency == 0:
@@ -119,11 +118,11 @@ class Trainer(object):
             if self.num_epoch % 2 == 0:
                 # This epoch is not using image_D
                 use_im_d = False
-                # self.logger.info(f'Not using Image D in epoch: {self.num_epoch}')
+
             if self.num_epoch % 2 != 0:
                 # This epoch is not using W_D
                 use_w_d = False
-                # self.logger.info(f'Not using W_d in epoch: {self.num_epoch}')
+
 
         attr_img, id_img, id_mask, real_w, real_img, matching_ws = self.data_loader.get_batch(is_cross=self.is_cross_epoch)
 
@@ -137,9 +136,6 @@ class Trainer(object):
 
             attr_out = self.model.G.attr_encoder(attr_input)
             attr_embedding = attr_out
-
-            self.logger.info(f'attr embedding stats- mean: {tf.reduce_mean(tf.abs(attr_embedding)):.5f},'
-                             f' variance: {tf.math.reduce_variance(attr_embedding):.5f}')
 
             z_tag = tf.concat([id_embedding, attr_embedding], -1)
             w = self.model.G.latent_spaces_mapping(z_tag)
@@ -158,9 +154,6 @@ class Trainer(object):
                     fake_w_logit = self.model.W_D(fake_w)
                     g_w_gan_loss = self.generator_gan_loss(fake_w_logit)
 
-                    self.logger.info(f'g W loss is {g_w_gan_loss:.3f}')
-                    self.logger.info(f'fake W logit: {tf.squeeze(fake_w_logit)}')
-
                     with g_tape.stop_recording():
                         real_w_logit = self.model.W_D(real_w)
                         w_d_loss = self.discriminator_loss(fake_w_logit, real_w_logit)
@@ -169,15 +162,11 @@ class Trainer(object):
                         if self.args.gp:
                             w_d_gp = self.R1_gp(self.model.W_D, real_w)
                             w_d_total_loss += w_d_gp
-                            self.logger.info(f'w_d_gp : {w_d_gp}')
-
-                        self.logger.info(f'W_D loss is {w_d_loss:.3f}')
-                        self.logger.info(f'real W logit: {tf.squeeze(real_w_logit)}')
+       
 
             if self.args.id_loss:
                 pred_id_embedding = self.model.G.id_encoder(pred)
                 id_loss = self.lambda_id * id_loss_func(pred_id_embedding, tf.stop_gradient(id_embedding_for_loss))
-                self.logger.info(f'id loss is {id_loss:.3f}')
                 self.id_ll.append(id_loss)
             if self.args.landmarks_loss:
                 try:
@@ -191,25 +180,21 @@ class Trainer(object):
                 else:
                     landmarks_loss = self.lambda_landmarks * \
                                      tf.reduce_mean(tf.keras.losses.MSE(src_landmarks, dst_landmarks))
-                    self.logger.info(f'landmarks loss is: {landmarks_loss:.3f}')
                 self.lnd_ll.append(landmarks_loss)
-                    # if landmarks_loss > 5:
-                    #     landmarks_loss = 0
-                    #     id_loss = 0
+
 
             if not self.is_cross_epoch and self.args.pixel_loss:
                 l1_loss = self.pixel_loss_func(id_img, pred, sample_weight=self.pixel_mask)
-                self.logger.info(f'L1 pixel loss is {l1_loss:.3f}')
+
                 self.l1_ll.append(l1_loss)
                 if self.args.pixel_loss_type == 'mix':
                     mssim = tf.reduce_mean(1 - tf.image.ssim_multiscale(id_img, pred, 1.0))
                     self.mssim_ll.append(mssim)
-                    self.logger.info(f'mssim loss is {l1_loss:.3f}')
+
                     pixel_loss = self.lambda_pixel * (0.84 * mssim + 0.16 * l1_loss)
                 else:
                     pixel_loss = self.lambda_pixel * l1_loss
-
-                self.logger.info(f'pixel loss is {pixel_loss:.3f}')
+                    
                 self.pixel_ll.append(pixel_loss)
 
 
@@ -223,21 +208,7 @@ class Trainer(object):
             self.logger.info(f'total G (not gan) loss is {total_g_not_gan_loss:.3f}')
             self.logger.info(f'G gan loss is {g_gan_loss:.3f}')
 
-        Writer.add_scalar('loss/landmarks_loss', landmarks_loss, step=self.num_epoch)
-        Writer.add_scalar('loss/total_g_not_gan_loss', total_g_not_gan_loss, step=self.num_epoch)
-
-        Writer.add_scalar('loss/id_loss', id_loss, step=self.num_epoch)
-
-        if use_w_d:
-            Writer.add_scalar('loss/g_w_gan_loss', g_w_gan_loss, step=self.num_epoch)
-            Writer.add_scalar('loss/W_D_loss', w_d_loss, step=self.num_epoch)
-            if self.args.gp:
-                Writer.add_scalar('loss/w_d_gp', w_d_gp, step=self.num_epoch)
-
-        if not self.is_cross_epoch:
-            Writer.add_scalar('loss/pixel_loss', pixel_loss, step=self.num_epoch)
-            Writer.add_scalar('loss/w_loss', w_loss, step=self.num_epoch)
-
+            
         if self.num_epoch%100==0:
             wandb.log({"epoch": self.num_epoch, "id_loss": np.mean(self.id_ll),"Lnd_loss": np.mean(self.lnd_ll),
             "l1_loss": np.mean(self.l1_ll),"pixel_loss":np.mean(self.pixel_ll),
@@ -268,8 +239,6 @@ class Trainer(object):
             self.g_gan_optimizer.apply_gradients(zip(g_gan_grads, self.model.G.trainable_variables))
 
             w_d_grads = w_d_tape.gradient(w_d_total_loss, self.model.W_D.trainable_variables)
-
-            self.logger.info(f'global W_D gan grad: {tf.linalg.global_norm(w_d_grads)}')
             self.w_d_optimizer.apply_gradients(zip(w_d_grads, self.model.W_D.trainable_variables))
 
         del g_tape
@@ -278,17 +247,23 @@ class Trainer(object):
 
     # Test
     def test(self):
-        self.model.my_save(f'_my_save_epoch_{self.num_epoch}')	
-        out_test = self.model.G(self.mask_test, self.attr_test, self.id_test)[0]
-        image_test = tf.clip_by_value(out_test, 0, 1)
-        utils.save_image(image_test[0], self.args.images_results.joinpath(f'{self.num_epoch}_first_prediction_test.png'))
-        utils.save_image(self.mask_test[0], self.args.images_results.joinpath(f'first_id_test.png'))
-        utils.save_image(self.attr_test[0], self.args.images_results.joinpath(f'first_attr_test.png'))
-        utils.save_image(self.id_test[0], self.args.images_results.joinpath(f'first_gt_test.png'))
-        utils.save_image(image_test[1], self.args.images_results.joinpath(f'{self.num_epoch}_second_prediction_test.png'))
-        utils.save_image(self.mask_test[1], self.args.images_results.joinpath(f'second_id_test.png'))
-        utils.save_image(self.attr_test[1], self.args.images_results.joinpath(f'second_attr_test.png'))
-        utils.save_image(self.id_test[1], self.args.images_results.joinpath(f'second_gt_test.png'))
+   
+#    from image_similarity_measures.quality_metrics import rmse, ssim, sr
+# from utils.general_utils import read_image , read_mask_image         
+#         ssim_measures= ssim(test_img, resized_img)
+#         rmse_measures= rmse(test_img, resized_img)
+#         sre_measures= sre(test_img, resized_img)
+#         self.model.my_save(f'_my_save_epoch_{self.num_epoch}')	
+#         out_test = self.model.G(self.mask_test, self.attr_test, self.id_test)[0]
+#         image_test = tf.clip_by_value(out_test, 0, 1)
+#         utils.save_image(image_test[0], self.args.images_results.joinpath(f'{self.num_epoch}_first_prediction_test.png'))
+#         utils.save_image(self.mask_test[0], self.args.images_results.joinpath(f'first_id_test.png'))
+#         utils.save_image(self.attr_test[0], self.args.images_results.joinpath(f'first_attr_test.png'))
+#         utils.save_image(self.id_test[0], self.args.images_results.joinpath(f'first_gt_test.png'))
+#         utils.save_image(image_test[1], self.args.images_results.joinpath(f'{self.num_epoch}_second_prediction_test.png'))
+#         utils.save_image(self.mask_test[1], self.args.images_results.joinpath(f'second_id_test.png'))
+#         utils.save_image(self.attr_test[1], self.args.images_results.joinpath(f'second_attr_test.png'))
+#         utils.save_image(self.id_test[1], self.args.images_results.joinpath(f'second_gt_test.png'))
 
 
 
