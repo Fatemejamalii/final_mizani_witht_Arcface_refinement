@@ -26,15 +26,7 @@ class DataLoader(object):
         ws_train_celeba = ws_train_female + ws_train_male
         train_celeba = trian_female + train_male
         self.celeba_list =  self.intersection(train_celeba, trian_mask)
-        print('celeba_list: ',len(self.celeba_list))
         self.ws_list = self.intersection( ws_train_celeba, trian_mask)
-        print('ws_list: ',len(self.ws_list))
-        print('t0:',self.celeba_list[0])
-        print('w0:',self.ws_list[0])
-        print('t100:',self.celeba_list[100])
-        print('w100:',self.ws_list[100])
-        print('t-1:',self.celeba_list[-1])
-        print('w-1:',self.ws_list[-1])
         dataset = args.dataset_path.joinpath(f'dataset_{args.resolution}')
         
         if self.wich_dataset == 'dataset_256':
