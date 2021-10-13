@@ -23,12 +23,18 @@ class DataLoader(object):
         ws_train_male = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_male')
         ws_train_female = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_female')
 	
-        ws_train_celeba = ws_train_male + ws_train_female
+        ws_train_celeba = ws_train_female + ws_train_male
         train_celeba = trian_female + train_male
         self.celeba_list =  self.intersection(train_celeba, trian_mask)
         print('celeba_list: ',len(self.celeba_list))
-        self.ws_list = self.intersection( ws_train_celeba  ,self.celeba_list)
+        self.ws_list = self.intersection( ws_train_celeba, trian_mask)
         print('ws_list: ',len(self.ws_list))
+        print('t0:',self.celeba_list[0])
+        print('w0:',self.ws_list[0])
+        print('t100:',self.celeba_list[100])
+        print('w100:',self.ws_list[100])
+        print('t-1:',self.celeba_list[-1])
+        print('w-1:',self.ws_list[-1])
         dataset = args.dataset_path.joinpath(f'dataset_{args.resolution}')
         
         if self.wich_dataset == 'dataset_256':
@@ -65,7 +71,7 @@ class DataLoader(object):
       lst3 = []
       for i, j in lst1:
         for k, h in lst2:
-          if i==k:
+          if i[:-4]==k[:-4]:
             lst3.append([j, h])  
       return lst3
         
