@@ -22,7 +22,7 @@ class Trainer(object):
         self.total_ll=[]
         self.pixel_ll=[]
           #WandB
-        wandb.init(project="CelebA_original_without_WD_4")
+        wandb.init(project="celeba_with_ws_0")
 
         self.model = model
         self.data_loader = data_loader
@@ -223,7 +223,7 @@ class Trainer(object):
             "l1_loss": np.mean(self.l1_ll),"pixel_loss":np.mean(self.pixel_ll),
             "total_g_not_gan_loss":np.mean(self.total_ll),"g_w_gan_loss":g_w_gan_loss,
              "gt_img": wandb.Image(id_img[0]) ,  "mask_img": wandb.Image(id_mask[0]) ,  "pred_img": wandb.Image(pred[0])})
-       self.model.my_save(f'_my_save_epoch_{self.num_epoch}')
+            self.model.my_save(f'_my_save_epoch_{self.num_epoch}')
 
             self.id_ll=[]
             self.lnd_ll=[]
