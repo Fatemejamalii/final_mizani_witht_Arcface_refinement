@@ -22,11 +22,11 @@ class Trainer(object):
         self.total_ll=[]
         self.pixel_ll=[]
           #WandB
-        wandb.init(project="celeba_with_ws_0")
+        wandb.init(project="celeba_with_ws_1")
 
         self.model = model
         self.data_loader = data_loader
-
+        self.attr_test, self.id_test, self.mask_test, self.real_w_test, self.real_test, self.matching_ws_test = self.data_loader.get_batch(is_cross=False)
         # lrs & optimizers
         lr = 5e-5 if self.args.resolution == 256 else 1e-5
 
@@ -257,24 +257,22 @@ class Trainer(object):
 
     # Test
     def test(self):
-        pass
-   
 #    from image_similarity_measures.quality_metrics import rmse, ssim, sr
 # from utils.general_utils import read_image , read_mask_image         
 #         ssim_measures= ssim(test_img, resized_img)
 #         rmse_measures= rmse(test_img, resized_img)
 #         sre_measures= sre(test_img, resized_img)
 #         self.model.my_save(f'_my_save_epoch_{self.num_epoch}')	
-#         out_test = self.model.G(self.mask_test, self.attr_test, self.id_test)[0]
-#         image_test = tf.clip_by_value(out_test, 0, 1)
-#         utils.save_image(image_test[0], self.args.images_results.joinpath(f'{self.num_epoch}_first_prediction_test.png'))
-#         utils.save_image(self.mask_test[0], self.args.images_results.joinpath(f'first_id_test.png'))
-#         utils.save_image(self.attr_test[0], self.args.images_results.joinpath(f'first_attr_test.png'))
-#         utils.save_image(self.id_test[0], self.args.images_results.joinpath(f'first_gt_test.png'))
-#         utils.save_image(image_test[1], self.args.images_results.joinpath(f'{self.num_epoch}_second_prediction_test.png'))
-#         utils.save_image(self.mask_test[1], self.args.images_results.joinpath(f'second_id_test.png'))
-#         utils.save_image(self.attr_test[1], self.args.images_results.joinpath(f'second_attr_test.png'))
-#         utils.save_image(self.id_test[1], self.args.images_results.joinpath(f'second_gt_test.png'))
+        out_test = self.model.G(self.mask_test, self.attr_test, self.id_test)[0]
+        image_test = tf.clip_by_value(out_test, 0, 1)
+        utils.save_image(image_test[0], self.args.images_results.joinpath(f'{self.num_epoch}_first_prediction_test.png'))
+        utils.save_image(self.mask_test[0], self.args.images_results.joinpath(f'first_id_test.png'))
+        utils.save_image(self.attr_test[0], self.args.images_results.joinpath(f'first_attr_test.png'))
+        utils.save_image(self.id_test[0], self.args.images_results.joinpath(f'first_gt_test.png'))
+        utils.save_image(image_test[1], self.args.images_results.joinpath(f'{self.num_epoch}_second_prediction_test.png'))
+        utils.save_image(self.mask_test[1], self.args.images_results.joinpath(f'second_id_test.png'))
+        utils.save_image(self.attr_test[1], self.args.images_results.joinpath(f'second_attr_test.png'))
+        utils.save_image(self.id_test[1], self.args.images_results.joinpath(f'second_gt_test.png'))
 
 
 
