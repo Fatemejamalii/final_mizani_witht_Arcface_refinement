@@ -15,6 +15,7 @@ class DataLoader(object):
         self.real_dataset = args.dataset_path.joinpath(f'real')
         self.wich_dataset = args.wich_dataset
         self.celeba_path =  args.celeba_path
+        self.celeba_ws_path = args.celeba_ws_path
         trian_female = self.get_celeba_items(self.celeba_path + '/female')
         train_male = self.get_celeba_items(self.celeba_path + '/male')
         trian_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
