@@ -19,14 +19,14 @@ class DataLoader(object):
         train_male = self.get_celeba_items(self.celeba_path + '/male')
         trian_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
 	
-	    ws_train_male = self.get_celeba_items(self.celeba_path + '/ws/male')
-	    ws_train_female = self.get_celeba_items(self.celeba_path + '/ws/female')
+    	ws_train_male = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_male')
+    	ws_train_female = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_female')
 	
-	    ws_train_celeba = ws_train_male + ws_train_female
+   	ws_train_celeba = ws_train_male + ws_train_female
         train_celeba = trian_female + train_male
         self.celeba_list =  self.intersection(train_celeba, trian_mask)
-	    print('celeba_list: ',len(self.celeba_list))
-	    self.ws_list = self.intersection( ws_train_celeba  ,self.celeba_list)
+    	print('celeba_list: ',len(self.celeba_list))
+    	self.ws_list = self.intersection( ws_train_celeba  ,self.celeba_list)
         print('ws_list: ',len(self.ws_list))
         dataset = args.dataset_path.joinpath(f'dataset_{args.resolution}')
         
