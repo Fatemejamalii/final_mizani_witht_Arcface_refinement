@@ -18,9 +18,16 @@ class DataLoader(object):
         trian_female = self.get_celeba_items(self.celeba_path + '/female')
         train_male = self.get_celeba_items(self.celeba_path + '/male')
         trian_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
+	
+	    ws_train_male = self.get_celeba_items(self.celeba_path + '/ws/male')
+	    ws_train_female = self.get_celeba_items(self.celeba_path + '/ws/female')
+	
+	    ws_train_celeba = ws_train_male + ws_train_female
         train_celeba = trian_female + train_male
         self.celeba_list =  self.intersection(train_celeba, trian_mask)
-        
+	    print('celeba_list: ',len(self.celeba_list))
+	    self.ws_list = self.intersection( ws_train_celeba  ,self.celeba_list)
+        print('ws_list: ',len(self.ws_list))
         dataset = args.dataset_path.joinpath(f'dataset_{args.resolution}')
         
         if self.wich_dataset == 'dataset_256':
@@ -110,12 +117,15 @@ class DataLoader(object):
         return ind, img, masked_img , land_img
 
     def get_w_by_ind(self, ind):
-        dir_name = f'{int(ind - ind % 1e3):05d}'
-        img_name = f'{ind:05d}.npy'
-        w_path = self.ws_dataset.joinpath(dir_name, img_name)
-
+	    if self.wich_dataset == 'dataset_256':
+	        dir_name = f'{int(ind - ind % 1e3):05d}'
+	        img_name = f'{ind:05d}.npy'
+	        w_path = self.ws_dataset.joinpath(dir_name, img_name)
+        else:
+            w_path = self.ws_list[ind][0]
+            
         w = np.load(w_path)
-
+	
         # Take one row while keeping dimension
         w = w[np.newaxis, 0]
 
