@@ -62,10 +62,18 @@ class Trainer(object):
 
         self.lambda_pixel = 1
 
-        self.lambda_id = 1
+        
         self.lambda_attr_id = 1
         self.lambda_landmarks = 0.001
         self.r1_gamma = 10
+        
+        if num_epoch <1000:
+            self.lambda_id = 0.02
+            self.lambda_l_w = 0.02
+        else:
+            self.lambda_id = 1
+            self.lambda_l_w = 1
+            
 
         # Test
         self.test_not_imporved = 0
@@ -125,13 +133,13 @@ class Trainer(object):
 
 
         attr_img, id_img, id_mask, real_w, real_img, matching_ws = self.data_loader.get_batch(is_cross=self.is_cross_epoch)
-
+        print('matching_ws:' , matching_ws.shape)
         # Forward that does not require grads
         id_embedding = self.model.G.id_encoder(id_mask)
         id_embedding_for_loss = self.model.G.pretrained_id_encoder(id_mask)
         src_landmarks = self.model.G.landmarks(id_img)  
         attr_input = attr_img
-
+        
         with tf.GradientTape(persistent=True) as g_tape:
 
             attr_out = self.model.G.attr_encoder(attr_input)
@@ -139,8 +147,9 @@ class Trainer(object):
 
             z_tag = tf.concat([id_embedding, attr_embedding], -1)
             w = self.model.G.latent_spaces_mapping(z_tag)
+            print('w:' , w.shape)
             fake_w = w[:, 0, :]
-
+            print('fake_w:' , fake_w.shape)
             self.logger.info(
                 f'w stats- mean: {tf.reduce_mean(tf.abs(fake_w)):.5f}, variance: {tf.math.reduce_variance(fake_w):.5f}')
 
