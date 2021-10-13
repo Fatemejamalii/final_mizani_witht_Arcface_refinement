@@ -256,6 +256,7 @@ class Trainer(object):
 
     # Test
     def test(self):
+        pass
    
 #    from image_similarity_measures.quality_metrics import rmse, ssim, sr
 # from utils.general_utils import read_image , read_mask_image         
