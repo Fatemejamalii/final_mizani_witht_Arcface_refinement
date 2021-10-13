@@ -133,7 +133,7 @@ class Trainer(object):
 
 
         attr_img, id_img, id_mask, real_w, real_img, matching_ws = self.data_loader.get_batch(is_cross=self.is_cross_epoch)
-        print('matching_ws:' , matching_ws.shape)
+#         print('matching_ws:' , matching_ws.shape)
         # Forward that does not require grads
         id_embedding = self.model.G.id_encoder(id_mask)
         id_embedding_for_loss = self.model.G.pretrained_id_encoder(id_mask)
@@ -147,9 +147,9 @@ class Trainer(object):
 
             z_tag = tf.concat([id_embedding, attr_embedding], -1)
             w = self.model.G.latent_spaces_mapping(z_tag)
-            print('w:' , w.shape)
+#             print('w:' , w.shape)
             fake_w = w[:, 0, :]
-            print('fake_w:' , fake_w.shape)
+#             print('fake_w:' , fake_w.shape)
             self.logger.info(
                 f'w stats- mean: {tf.reduce_mean(tf.abs(fake_w)):.5f}, variance: {tf.math.reduce_variance(fake_w):.5f}')
 
@@ -223,6 +223,7 @@ class Trainer(object):
             "l1_loss": np.mean(self.l1_ll),"pixel_loss":np.mean(self.pixel_ll),
             "total_g_not_gan_loss":np.mean(self.total_ll),"g_w_gan_loss":g_w_gan_loss,
              "gt_img": wandb.Image(id_img[0]) ,  "mask_img": wandb.Image(id_mask[0]) ,  "pred_img": wandb.Image(pred[0])})
+       self.model.my_save(f'_my_save_epoch_{self.num_epoch}')
 
             self.id_ll=[]
             self.lnd_ll=[]
