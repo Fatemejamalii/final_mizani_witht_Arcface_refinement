@@ -19,9 +19,6 @@ class Inference(object):
 
     def infer_pairs(self):
         names = [f for f in self.args.id_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes]
-        names.extend([f for f in self.args.attr_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes])
-        df = pd.DataFrame(columns=['img_name', 'id_loss_'+ str(self.args.epochnum) , 
-        'lnd_loss_'+ str(self.args.epochnum) , 'L1_loss_'+ str(self.args.epochnum)])
         for img_name in tqdm(names):
             id_path = utils.find_file_by_str(self.args.id_dir, img_name.stem)
             mask_path = utils.find_file_by_str(self.args.mask_dir, img_name.stem)
@@ -39,15 +36,10 @@ class Inference(object):
             pred_id_embedding = self.G.id_encoder(out_img)
             gt_id_embedding = self.G.id_encoder(id_img)
             id_loss = tf.reduce_mean(tf.keras.losses.MAE(gt_id_embedding, pred_id_embedding))
-            lnd_loss = tf.constant(0)
-            # tf.reduce_mean(tf.keras.losses.MSE(self.G.landmarks(id_img) , self.G.landmarks(out_img)))  
+            lnd_loss = tf.constant(0)  
             L1_loss  = self.pixel_loss_func(id_img, out_img)
-            df =df.append({'img_name':id_img[-9:], 'id_loss_'+ str(self.args.epochnum):id_loss.numpy(),'lnd_loss_'+ str(self.args.epochnum):lnd_loss.numpy(), 
-             'L1_loss_'+ str(self.args.epochnum):L1_loss.numpy()},ignore_index=True)
             
             utils.save_image(out_img, self.args.output_dir.joinpath(f'{img_name.name}'))
-        name = 'result_' + str(self.args.epochnum) + '.csv'
-        df.to_csv(name)
 
     def opt_infer_pairs(self):
         names = [f for f in self.args.id_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes]
