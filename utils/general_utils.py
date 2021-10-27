@@ -20,6 +20,18 @@ def read_image(img_path, resolution, align=False):
         img = read_SG_image(img_path, resolution)
 
     return img
+
+def read_eye_image(img_path, resolution):
+    img = cv2.imread(img_path) 
+    img= cv2.resize(img,(112,112))
+    img = img.astype(np.float32) / 255.
+    if len(img.shape) == 3:
+        img = np.expand_dims(img, 0)
+     return img
+	
+	
+	
+	
 def read_mask_image(img_path, mask_path, resolution, size=256, resize=True):
     im = Image.open(img_path)
     im = im.convert('RGB')
