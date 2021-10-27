@@ -145,15 +145,13 @@ class Trainer(object):
             attr_out = self.model.G.attr_encoder(attr_input)
             attr_embedding = attr_out
 
-            z_tag = tf.concat([id_embedding, attr_embedding], -1)
-            w = self.model.G.latent_spaces_mapping(z_tag)
-#             print('w:' , w.shape)
-            fake_w = w[:, 0, :]
-#             print('fake_w:' , fake_w.shape)
-            self.logger.info(
-                f'w stats- mean: {tf.reduce_mean(tf.abs(fake_w)):.5f}, variance: {tf.math.reduce_variance(fake_w):.5f}')
+#             z_tag = tf.concat([id_embedding, attr_embedding], -1)
+#             w = self.model.G.latent_spaces_mapping(z_tag)
+#             fake_w = w[:, 0, :]
+#             self.logger.info(
+#                 f'w stats- mean: {tf.reduce_mean(tf.abs(fake_w)):.5f}, variance: {tf.math.reduce_variance(fake_w):.5f}')
 
-            pred = self.model.G.stylegan_s(w)
+            pred = self.model.G.stylegan_s(id_embedding)
 
             # Move to roughly [0,1]
             pred = (pred + 1) / 2
