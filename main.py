@@ -66,7 +66,7 @@ def main():
 #         with desc_file.open('w') as f:
 #             f.write(description)
 
-    id_model_path = args.pretrained_models_path.joinpath('vggface2.h5')
+    id_model_path = args.arcface_checkpoints
     stylegan_G_synthesis_path = str(
         args.pretrained_models_path.joinpath(f'stylegan_G_{args.resolution}x{args.resolution}_synthesis'))
     landmarks_model_path = str(args.pretrained_models_path.joinpath('face_utils/keypoints'))
