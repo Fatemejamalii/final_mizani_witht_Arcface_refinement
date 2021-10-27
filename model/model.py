@@ -44,6 +44,5 @@ class Network(Model):
 
     def _set_trainable_behavior(self, trainable):
         self.G.attr_encoder.trainable = trainable
-        self.G.id_encoder.trainable = trainable
         self.G.latent_spaces_mapping.trainable = trainable
         
