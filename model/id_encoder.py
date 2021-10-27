@@ -20,7 +20,7 @@ class IDEncoder(Model):
         self.model = ArcFaceModel(size=112,backbone_type='ResNet50',training=False)
         ckpt_path = tf.train.latest_checkpoint(model_path)
         if ckpt_path is not None:
-            model.load_weights(ckpt_path)
+            self.model.load_weights(ckpt_path)
         else:
             print("[*] Cannot find ckpt.")
             exit()
