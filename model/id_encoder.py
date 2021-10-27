@@ -7,7 +7,7 @@ from absl.flags import FLAGS
 import cv2
 import os
 import time
-from modules.evaluations import get_val_data, perform_val
+# from modules.evaluations import get_val_data, perform_val
 from modules.models import ArcFaceModel
 from modules.utils import set_memory_growth, load_yaml, l2_norm
 
@@ -18,7 +18,7 @@ class IDEncoder(Model):
         super().__init__()
         self.args = args
         self.model = ArcFaceModel(size=112,backbone_type='ResNet50',training=False)
-        ckpt_path = tf.train.latest_checkpoint('/content/drive/MyDrive/arcface-tf2/checkpoints/arc_res50/')
+        ckpt_path = tf.train.latest_checkpoint(model_path)
         if ckpt_path is not None:
             model.load_weights(ckpt_path)
         else:
