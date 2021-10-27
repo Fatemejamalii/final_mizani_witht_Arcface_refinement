@@ -14,11 +14,11 @@ from tensorflow.keras import layers, Model
 
 
 class Network(Model):
-    def __init__(self, args, id_net_path, base_generator,
+    def __init__(self, args,arc_net_path. id_net_path, base_generator,
                  landmarks_net_path=None, face_detection_model_path=None, test_id_net_path=None):
         super().__init__()
         self.args = args
-        self.G = generator.G(args, id_net_path, base_generator,
+        self.G = generator.G(args,arc_net_path, id_net_path, base_generator,
                              landmarks_net_path, face_detection_model_path, test_id_net_path)
 
         if self.args.train:
