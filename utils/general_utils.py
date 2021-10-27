@@ -27,7 +27,7 @@ def read_eye_image(img_path, resolution):
     img = img.astype(np.float32) / 255.
     if len(img.shape) == 3:
         img = np.expand_dims(img, 0)
-     return img
+    return img
 	
 	
 	
