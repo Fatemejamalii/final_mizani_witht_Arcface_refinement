@@ -3,7 +3,7 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from utils.general_utils import read_image , read_mask_image
+from utils.general_utils import read_image, read_eye_image, read_mask_image
 
 
 class DataLoader(object):
