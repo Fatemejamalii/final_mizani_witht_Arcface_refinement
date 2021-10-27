@@ -28,6 +28,7 @@ class BaseArgs(ABC):
         self.parser.add_argument('--resolution', type=int, default=256, choices=[256, 1024])
         self.parser.add_argument('--load_checkpoint')
         self.parser.add_argument('--pretrained_models_path', type=Path, required=True)
+        self.parser.add_argument('--arcface_checkpoints' , type=Path, required=True )
 
         BaseArgs.add_bool_arg(self.parser, 'const_noise')
 
