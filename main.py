@@ -66,7 +66,8 @@ def main():
 #         with desc_file.open('w') as f:
 #             f.write(description)
 
-    id_model_path = args.arcface_checkpoints
+    arc_model_path = args.arcface_checkpoints
+    id_model_path = args.pretrained_models_path.joinpath('vggface2.h5')
     stylegan_G_synthesis_path = str(
         args.pretrained_models_path.joinpath(f'stylegan_G_{args.resolution}x{args.resolution}_synthesis'))
     landmarks_model_path = str(args.pretrained_models_path.joinpath('face_utils/keypoints'))
@@ -78,7 +79,7 @@ def main():
     stylegan_G_synthesis = StyleGAN_G_synthesis(resolution=args.resolution, is_const_noise=args.const_noise)
     stylegan_G_synthesis.load_weights(stylegan_G_synthesis_path)
 
-    network = Network(args, id_model_path, stylegan_G_synthesis, landmarks_model_path,
+    network = Network(args,arc_model_path, id_model_path, stylegan_G_synthesis, landmarks_model_path,
                       face_detection_model_path, arcface_model_path)
     data_loader = DataLoader(args)
 
