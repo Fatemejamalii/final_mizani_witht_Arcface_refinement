@@ -12,14 +12,14 @@ from tensorflow.keras import layers, Model
 
 
 class G(Model):
-    def __init__(self, args, id_model_path, image_G,
+    def __init__(self, args,arc_model_path, id_model_path, image_G,
                  landmarks_net_path, face_detection_model_path, test_id_model_path):
 
         super().__init__()
         self.args = args
         self.logger = logging.getLogger(__class__.__name__)
 
-        self.id_encoder = id_encoder.IDEncoder(args, id_model_path)
+        self.id_encoder = id_encoder.IDEncoder(args, arc_model_path)
         self.id_encoder.trainable = False
         
         self.pretrained_id_encoder = pretrained_id_encoder.IDEncoder(args, id_model_path)
