@@ -15,18 +15,19 @@ class DataLoader(object):
         self.real_dataset = args.dataset_path.joinpath(f'real')
         self.wich_dataset = args.wich_dataset
         self.celeba_path =  args.celeba_path
+	self.eye_dataset = args.eye_dataset
         self.celeba_ws_path = args.celeba_ws_path
         trian_female = self.get_celeba_items(self.celeba_path + '/female')
         train_male = self.get_celeba_items(self.celeba_path + '/male')
-        trian_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
+        trian_eyes = self.get_celeba_items(self.eye_dataset)
 	
         ws_train_male = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_male')
         ws_train_female = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_female')
 	
         ws_train_celeba = ws_train_female + ws_train_male
         train_celeba = trian_female + train_male
-        self.celeba_list =  self.intersection(train_celeba, trian_mask)
-        self.ws_list = self.intersection( ws_train_celeba, trian_mask)
+        self.celeba_list =  self.intersection(train_celeba, trian_eyes)
+        self.ws_list = self.intersection( ws_train_celeba, trian_eyes)
         dataset = args.dataset_path.joinpath(f'dataset_{args.resolution}')
         
         if self.wich_dataset == 'dataset_256':
@@ -94,12 +95,13 @@ class DataLoader(object):
                     mask_path = self.mask_dataset.joinpath(dir_name, img_name)
             else:
                 img_path = self.celeba_list[ind][0]
-                mask_path = self.celeba_list[ind][1]
+                eye_path = self.celeba_list[ind][1]
                 
             try:
                 img_name = f'{ind:05d}.png'
                 dir_name = f'{int(ind - ind % 1e3):05d}'
-                img = read_image(img_path, self.args.resolution) 				
+                img = read_image(img_path, self.args.resolution)
+		eye_img =  read_eye_image(eye_path, self.args.resolution)
                 masked_img, land_img = read_mask_image(img_path, mask_path, self.args.resolution)
 				
 				
@@ -113,7 +115,7 @@ class DataLoader(object):
                     raise IOError('Failed reading multiples images')
                 continue
 
-        return ind, img, masked_img , land_img
+        return ind, img, eye_img , land_img
 
     def get_w_by_ind(self, ind):
         
