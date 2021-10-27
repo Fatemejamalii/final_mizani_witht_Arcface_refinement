@@ -22,7 +22,7 @@ class Trainer(object):
         self.total_ll=[]
         self.pixel_ll=[]
           #WandB
-        wandb.init(project="celeba_with_ws_1")
+        # wandb.init(project="celeba_with_ws_1")
 
         self.model = model
         self.data_loader = data_loader
@@ -93,10 +93,14 @@ class Trainer(object):
 #                 self.logger.info('This epoch is same-face')
 
             try:
+
                 if self.num_epoch % self.args.test_frequency == 0:
                     self.test()
-
+                    
                 self.train_epoch()
+                
+
+                
 
             except Exception as e:
                 self.logger.exception(e)
@@ -155,6 +159,15 @@ class Trainer(object):
 
             # Move to roughly [0,1]
             pred = (pred + 1) / 2
+
+            utils.save_image(pred[0], self.args.images_results.joinpath(f'{self.num_epoch}_first_prediction.png'))
+            utils.save_image(self.id_mask[0], self.args.images_results.joinpath(f'first_id.png'))
+            utils.save_image(self.attr_img[0], self.args.images_results.joinpath(f'first_attr.png'))
+            utils.save_image(self.id_img[0], self.args.images_results.joinpath(f'first_gt.png'))
+            utils.save_image(pred[1], self.args.images_results.joinpath(f'{self.num_epoch}_second_prediction.png'))
+            utils.save_image(self.id_mask[1], self.args.images_results.joinpath(f'second_id.png'))
+            utils.save_image(self.attr_img[1], self.args.images_results.joinpath(f'second_attr.png'))
+            utils.save_image(self.id_img[1], self.args.images_results.joinpath(f'second_gt.png'))
 
             if use_w_d:
                 with tf.GradientTape() as w_d_tape:
@@ -216,12 +229,12 @@ class Trainer(object):
             self.logger.info(f'G gan loss is {g_gan_loss:.3f}')
 
             
-        if self.num_epoch%100==0:
-            wandb.log({"epoch": self.num_epoch, "id_loss": np.mean(self.id_ll),"Lnd_loss": np.mean(self.lnd_ll),
-            "l1_loss": np.mean(self.l1_ll),"pixel_loss":np.mean(self.pixel_ll),
-            "total_g_not_gan_loss":np.mean(self.total_ll),"g_w_gan_loss":g_w_gan_loss,
-             "gt_img": wandb.Image(id_img[0]) ,  "mask_img": wandb.Image(id_mask[0]) ,  "pred_img": wandb.Image(pred[0])})
-            self.model.my_save(f'_my_save_epoch_{self.num_epoch}')
+        # if self.num_epoch%100==0:
+        #     wandb.log({"epoch": self.num_epoch, "id_loss": np.mean(self.id_ll),"Lnd_loss": np.mean(self.lnd_ll),
+        #     "l1_loss": np.mean(self.l1_ll),"pixel_loss":np.mean(self.pixel_ll),
+        #     "total_g_not_gan_loss":np.mean(self.total_ll),"g_w_gan_loss":g_w_gan_loss,
+        #      "gt_img": wandb.Image(id_img[0]) ,  "mask_img": wandb.Image(id_mask[0]) ,  "pred_img": wandb.Image(pred[0])})
+        #     self.model.my_save(f'_my_save_epoch_{self.num_epoch}')
 
             self.id_ll=[]
             self.lnd_ll=[]
@@ -255,22 +268,9 @@ class Trainer(object):
 
     # Test
     def test(self):
-#    from image_similarity_measures.quality_metrics import rmse, ssim, sr
-# from utils.general_utils import read_image , read_mask_image         
-#         ssim_measures= ssim(test_img, resized_img)
-#         rmse_measures= rmse(test_img, resized_img)
-#         sre_measures= sre(test_img, resized_img)
-#         self.model.my_save(f'_my_save_epoch_{self.num_epoch}')	
-        out_test = self.model.G(self.mask_test, self.attr_test, self.id_test)[0]
-        image_test = tf.clip_by_value(out_test, 0, 1)
-        utils.save_image(image_test[0], self.args.images_results.joinpath(f'{self.num_epoch}_first_prediction_test.png'))
-        utils.save_image(self.mask_test[0], self.args.images_results.joinpath(f'first_id_test.png'))
-        utils.save_image(self.attr_test[0], self.args.images_results.joinpath(f'first_attr_test.png'))
-        utils.save_image(self.id_test[0], self.args.images_results.joinpath(f'first_gt_test.png'))
-        utils.save_image(image_test[1], self.args.images_results.joinpath(f'{self.num_epoch}_second_prediction_test.png'))
-        utils.save_image(self.mask_test[1], self.args.images_results.joinpath(f'second_id_test.png'))
-        utils.save_image(self.attr_test[1], self.args.images_results.joinpath(f'second_attr_test.png'))
-        utils.save_image(self.id_test[1], self.args.images_results.joinpath(f'second_gt_test.png'))
+      pass
+
+
 
 
 
