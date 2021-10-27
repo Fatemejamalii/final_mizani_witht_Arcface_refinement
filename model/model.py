@@ -14,7 +14,7 @@ from tensorflow.keras import layers, Model
 
 
 class Network(Model):
-    def __init__(self, args,arc_net_path. id_net_path, base_generator,
+    def __init__(self, args,arc_net_path, id_net_path, base_generator,
                  landmarks_net_path=None, face_detection_model_path=None, test_id_net_path=None):
         super().__init__()
         self.args = args
