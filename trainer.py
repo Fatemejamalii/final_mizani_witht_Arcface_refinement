@@ -137,6 +137,11 @@ class Trainer(object):
 
 
         attr_img, id_img, id_mask, real_img, eye_img = self.data_loader.get_batch(is_cross=self.is_cross_epoch)
+        utils.save_image(eye_img[0], self.args.images_results.joinpath(f'first_eye.png'))
+        utils.save_image(id_mask[0], self.args.images_results.joinpath(f'first_id.png'))
+        utils.save_image(attr_img[0], self.args.images_results.joinpath(f'first_attr.png'))
+        utils.save_image(id_img[0], self.args.images_results.joinpath(f'first_gt.png'))
+
 
         id_embedding = self.model.G.id_encoder(eye_img)
         id_embedding_for_loss = self.model.G.pretrained_id_encoder(id_mask)
@@ -171,7 +176,7 @@ class Trainer(object):
        
 
             if self.args.id_loss:
-                pred_id_embedding = self.model.G.id_encoder(pred)
+                pred_id_embedding = self.model.G.pred_id_embedding(pred)
                 id_loss = self.lambda_id * id_loss_func(pred_id_embedding, tf.stop_gradient(id_embedding_for_loss))
                 self.id_ll.append(id_loss)
             if self.args.landmarks_loss:
