@@ -138,7 +138,7 @@ class DataLoader(object):
         else:
             w_path = self.ws_list[ind][0]
 	 
-	w = None
+        w = None
             
 #         w = np.load(w_path)
 	
