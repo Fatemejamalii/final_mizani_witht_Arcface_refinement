@@ -29,7 +29,7 @@ class IDEncoder(Model):
 
     @tf.function
     def call(self, input_x, get_intermediate=False):
-        embedding = self.model(x)
+        embedding = self.model(input_x)
         embedding = tf.math.l2_normalize(embedding, axis=-1)
         embedding = tf.expand_dims(embedding, 1)
 
