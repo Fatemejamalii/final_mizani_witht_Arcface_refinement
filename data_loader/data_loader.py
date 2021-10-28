@@ -49,7 +49,7 @@ class DataLoader(object):
                 self.min_val_ind = self.train_max_ind + 1
         else:
             self.ws_dataset = dataset.joinpath('ws')
-            max_dir = len(self.celeba_list)
+            max_dir = len(self.final_celeba_list)
             self.max_ind = max_dir
             self.train_max_ind = max_dir
             self.min_val_ind = max_dir + 1
@@ -215,4 +215,5 @@ class DataLoader(object):
             _, real_ws,_,_ = self.batch_samples(self.get_real_w, is_train)
 
         return attr_img, id_img, id_mask, real_ws, real_img, matching_ws
+
 
