@@ -176,7 +176,7 @@ class Trainer(object):
        
 
             if self.args.id_loss:
-                pred_id_embedding = self.model.G.pred_id_embedding(pred)
+                pred_id_embedding = self.model.G.pretrained_id_encoder(pred)
                 id_loss = self.lambda_id * id_loss_func(pred_id_embedding, tf.stop_gradient(id_embedding_for_loss))
                 self.id_ll.append(id_loss)
             if self.args.landmarks_loss:
