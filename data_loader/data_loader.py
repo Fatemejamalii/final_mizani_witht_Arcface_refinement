@@ -127,33 +127,35 @@ class DataLoader(object):
                     raise IOError('Failed reading multiples images')
                 continue
 
-        return ind, img, eye_img , land_img
+        return ind, img, masked_img , land_img, eye_img
 
     def batch_samples(self, get_sample_func, is_train, black_list=None, is_real=False):
         batch = []
         masked_img_batch=[]
         land_img_batch=[]
+        eye_img_batch=[]
         indices = []
 
         if not black_list:
             black_list = []
         for i in range(self.args.batch_size):
-            ind, sample,sample_masked_img, sample_land_img  = get_sample_func(is_train, black_list, is_real)
+            ind, sample,sample_masked_img, sample_land_img, sample_eye_img  = get_sample_func(is_train, black_list, is_real)
 
             batch.append(sample)
             masked_img_batch.append(sample_masked_img)
             land_img_batch.append(sample_land_img)
+            eye_img_batch.append(sample_eye_img)
             indices.append(ind)
 
         batch = tf.concat(batch, 0)
         masked_img_batch = tf.concat(masked_img_batch, 0)
         land_img_batch = tf.concat(land_img_batch, 0)
-        return indices, batch, masked_img_batch, land_img_batch 
+        eye_img_batch = tf.concat(eye_img_batch, 0)
+        return indices, batch, masked_img_batch, land_img_batch, eye_img_batch
 
     def get_batch(self, is_train=True, is_cross=False, ws=True):
         black_list = []
-        id_imgs_indices, id_img, id_mask, id_land = self.batch_samples(self.get_image, is_train)
-        matching_ws = None
+        id_imgs_indices, id_img, id_mask, id_land, id_eye = self.batch_samples(self.get_image, is_train)
 
         self.logger.debug(f'ID images read: {id_imgs_indices}')
         black_list.extend(id_imgs_indices)
@@ -177,16 +179,14 @@ class DataLoader(object):
                 attr_img = id_land
 
         if not is_train:
-            return id_land, id_img, id_mask
+            return id_land, id_img, id_mask, id_eye
 
-        # Only for training
-        real_img = None
-        real_ws = None
+ 
 
         if self.args.train and self.args.reals:
-            real_imgs_indices, real_img, real_img_mask, real_img_land = self.batch_samples(self.get_image, is_train, black_list=[], is_real=True)
+            real_imgs_indices, real_img, real_img_mask, real_img_land, real_img_eye = self.batch_samples(self.get_image, is_train, black_list=[], is_real=True)
 
 
-        return attr_img, id_img, id_mask, real_img
+        return attr_img, id_img, id_mask, real_img, id_eye
 
 
