@@ -181,7 +181,7 @@ class DataLoader(object):
         if not is_train:
             return id_land, id_img, id_mask, id_eye
 
- 
+        real_img = None
 
         if self.args.train and self.args.reals:
             real_imgs_indices, real_img, real_img_mask, real_img_land, real_img_eye = self.batch_samples(self.get_image, is_train, black_list=[], is_real=True)
