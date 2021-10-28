@@ -26,7 +26,7 @@ class Trainer(object):
 
         self.model = model
         self.data_loader = data_loader
-        self.attr_test, self.id_test, self.mask_test, self.real_w_test, self.real_test, self.matching_ws_test = self.data_loader.get_batch(is_cross=False)
+        self.attr_test, self.id_test, self.mask_test, self.real_test = self.data_loader.get_batch(is_cross=False)
         # lrs & optimizers
         lr = 5e-5 if self.args.resolution == 256 else 1e-5
 
@@ -137,8 +137,7 @@ class Trainer(object):
 
 
         attr_img, id_img, id_mask, real_img = self.data_loader.get_batch(is_cross=self.is_cross_epoch)
-#         print('matching_ws:' , matching_ws.shape)
-        # Forward that does not require grads
+
         id_embedding = self.model.G.id_encoder(id_mask)
         id_embedding_for_loss = self.model.G.pretrained_id_encoder(id_mask)
         src_landmarks = self.model.G.landmarks(id_img)  
@@ -151,10 +150,6 @@ class Trainer(object):
 
             z_tag = tf.concat([id_embedding, attr_embedding], -1)
             w = self.model.G.latent_spaces_mapping(z_tag)
-            fake_w = w[:, 0, :]
-#             self.logger.info(
-#                 f'w stats- mean: {tf.reduce_mean(tf.abs(fake_w)):.5f}, variance: {tf.math.reduce_variance(fake_w):.5f}')
-
             pred = self.model.G.stylegan_s(id_embedding)
 
             # Move to roughly [0,1]
