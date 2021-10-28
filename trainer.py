@@ -136,7 +136,7 @@ class Trainer(object):
                 use_w_d = False
 
 
-        attr_img, id_img, id_mask, real_w, real_img, matching_ws = self.data_loader.get_batch(is_cross=self.is_cross_epoch)
+        attr_img, id_img, id_mask, real_img = self.data_loader.get_batch(is_cross=self.is_cross_epoch)
 #         print('matching_ws:' , matching_ws.shape)
         # Forward that does not require grads
         id_embedding = self.model.G.id_encoder(id_mask)
