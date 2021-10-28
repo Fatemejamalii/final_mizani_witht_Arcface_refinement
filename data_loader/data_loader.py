@@ -19,7 +19,7 @@ class DataLoader(object):
         self.celeba_ws_path = args.celeba_ws_path
         trian_female = self.get_celeba_items(self.celeba_path + '/female')
         train_male = self.get_celeba_items(self.celeba_path + '/male')
-	    train_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
+	      train_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
         trian_eyes = self.get_celeba_items(self.eye_dataset)
 	
         ws_train_male = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_male')
@@ -76,7 +76,7 @@ class DataLoader(object):
       for i, j , h in lst1:
         for m, n in lst2:
           if i[:-4]==m[:-4]:
-        lst3.append([j,h,n])  
+            lst3.append([j,h,n])  
       return lst3
         
     def get_image(self, is_train, black_list=None, is_real=False):
