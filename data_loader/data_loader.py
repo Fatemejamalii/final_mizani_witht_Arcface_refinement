@@ -19,6 +19,7 @@ class DataLoader(object):
         self.celeba_ws_path = args.celeba_ws_path
         trian_female = self.get_celeba_items(self.celeba_path + '/female')
         train_male = self.get_celeba_items(self.celeba_path + '/male')
+	    train_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
         trian_eyes = self.get_celeba_items(self.eye_dataset)
 	
         ws_train_male = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_male')
@@ -26,7 +27,9 @@ class DataLoader(object):
 	
         ws_train_celeba = ws_train_female + ws_train_male
         train_celeba = trian_female + train_male
-        self.celeba_list =  self.intersection(train_celeba, trian_eyes)
+
+        celeba_list =  self.intersection(train_celeba, train_mask)
+        self.final_celeba_list =  self.intersection_2(celeba_list, trian_eyes)
         self.ws_list = self.intersection( ws_train_celeba, trian_eyes)
         dataset = args.dataset_path.joinpath(f'dataset_{args.resolution}')
         
@@ -65,7 +68,15 @@ class DataLoader(object):
       for i, j in lst1:
         for k, h in lst2:
           if i[:-4]==k[:-4]:
-            lst3.append([j, h])  
+            lst3.append([i,j, h])  
+      return lst3
+
+    def intersection_2(self, lst1,lst2):
+      lst3 = []
+      for i, j , h in lst1:
+        for m, n in lst2:
+          if i[:-4]==m[:-4]:
+        lst3.append([j,h,n])  
       return lst3
         
     def get_image(self, is_train, black_list=None, is_real=False):
@@ -94,8 +105,9 @@ class DataLoader(object):
                     img_path = self.image_dataset.joinpath(dir_name, img_name)
                     mask_path = self.mask_dataset.joinpath(dir_name, img_name)
             else:
-                img_path = self.celeba_list[ind][0]
-                eye_path = self.celeba_list[ind][1]
+                img_path = self.final_celeba_list[ind][0]
+                mask_path = self.final_celeba_list[ind][1]
+                eye_path = self.final_celeba_list[ind][2]
                 
             try:
                 img_name = f'{ind:05d}.png'
