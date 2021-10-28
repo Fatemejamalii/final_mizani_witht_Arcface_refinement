@@ -137,11 +137,13 @@ class DataLoader(object):
 	          w_path = self.ws_dataset.joinpath(dir_name, img_name)
         else:
             w_path = self.ws_list[ind][0]
+	 
+	w = None
             
-        w = np.load(w_path)
+#         w = np.load(w_path)
 	
         # Take one row while keeping dimension
-        w = w[np.newaxis, 0]
+#         w = w[np.newaxis, 0]
 
         return w
 
@@ -195,8 +197,9 @@ class DataLoader(object):
         else:
             if is_train:
                 attr_img = id_land
-                matching_ws = [self.get_w_by_ind(ind) for ind in id_imgs_indices]
-                matching_ws = tf.concat(matching_ws, 0)
+                # matching_ws = [self.get_w_by_ind(ind) for ind in id_imgs_indices]
+                # matching_ws = tf.concat(matching_ws, 0)
+                matching_ws = None
             else:
                 attr_img = id_land
 
