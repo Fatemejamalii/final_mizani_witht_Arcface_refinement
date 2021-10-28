@@ -129,30 +129,6 @@ class DataLoader(object):
 
         return ind, img, eye_img , land_img
 
-    def get_w_by_ind(self, ind):
-        
-        if self.wich_dataset == 'dataset_256':
-	          dir_name = f'{int(ind - ind % 1e3):05d}'
-	          img_name = f'{ind:05d}.npy'
-	          w_path = self.ws_dataset.joinpath(dir_name, img_name)
-        else:
-            w_path = self.ws_list[ind][0]
-	 
-        w = None
-            
-#         w = np.load(w_path)
-	
-        # Take one row while keeping dimension
-#         w = w[np.newaxis, 0]
-
-        return w
-
-    def get_real_w(self, is_train, black_list=None, is_real=False):
-        ind = np.random.randint(0, self.max_ind)
-        w = self.get_w_by_ind(ind)
-
-        return ind, w, w, w
-
     def batch_samples(self, get_sample_func, is_train, black_list=None, is_real=False):
         batch = []
         masked_img_batch=[]
@@ -197,9 +173,6 @@ class DataLoader(object):
         else:
             if is_train:
                 attr_img = id_land
-                # matching_ws = [self.get_w_by_ind(ind) for ind in id_imgs_indices]
-                # matching_ws = tf.concat(matching_ws, 0)
-                matching_ws = None
             else:
                 attr_img = id_land
 
@@ -212,11 +185,8 @@ class DataLoader(object):
 
         if self.args.train and self.args.reals:
             real_imgs_indices, real_img, real_img_mask, real_img_land = self.batch_samples(self.get_image, is_train, black_list=[], is_real=True)
-            self.logger.debug(f'Real images read: {real_imgs_indices}')
 
-        if ws:
-            _, real_ws,_,_ = self.batch_samples(self.get_real_w, is_train)
 
-        return attr_img, id_img, id_mask, real_ws, real_img, matching_ws
+        return attr_img, id_img, id_mask, real_img
 
 
