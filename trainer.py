@@ -22,7 +22,7 @@ class Trainer(object):
         self.total_ll=[]
         self.pixel_ll=[]
           #WandB
-        # wandb.init(project="model_with_Arcface")
+        wandb.init(project="model_with_Arcface")
 
         self.model = model
         self.data_loader = data_loader
@@ -137,11 +137,6 @@ class Trainer(object):
 
 
         attr_img, id_img, id_mask, real_img, eye_img = self.data_loader.get_batch(is_cross=self.is_cross_epoch)
-        utils.save_image(eye_img[0], self.args.images_results.joinpath(f'first_eye.png'))
-        utils.save_image(id_mask[0], self.args.images_results.joinpath(f'first_id.png'))
-        utils.save_image(attr_img[0], self.args.images_results.joinpath(f'first_attr.png'))
-        utils.save_image(id_img[0], self.args.images_results.joinpath(f'first_gt.png'))
-
 
         id_embedding = self.model.G.id_encoder(eye_img)
         id_embedding_for_loss = self.model.G.pretrained_id_encoder(id_mask)
@@ -220,12 +215,12 @@ class Trainer(object):
             self.logger.info(f'G gan loss is {g_gan_loss:.3f}')
 
             
-        # if self.num_epoch%100==0:
-        #     wandb.log({"epoch": self.num_epoch, "id_loss": np.mean(self.id_ll),"Lnd_loss": np.mean(self.lnd_ll),
-        #     "l1_loss": np.mean(self.l1_ll),"pixel_loss":np.mean(self.pixel_ll),
-        #     "total_g_not_gan_loss":np.mean(self.total_ll),"g_w_gan_loss":g_w_gan_loss,
-        #      "gt_img": wandb.Image(id_img[0]) ,  "mask_img": wandb.Image(id_mask[0]) ,  "pred_img": wandb.Image(pred[0])})
-        #     self.model.my_save(f'_my_save_epoch_{self.num_epoch}')
+        if self.num_epoch%100==0:
+            wandb.log({"epoch": self.num_epoch, "id_loss": np.mean(self.id_ll),"Lnd_loss": np.mean(self.lnd_ll),
+            "l1_loss": np.mean(self.l1_ll),"pixel_loss":np.mean(self.pixel_ll),
+            "total_g_not_gan_loss":np.mean(self.total_ll),"g_w_gan_loss":g_w_gan_loss,
+             "gt_img": wandb.Image(id_img[0]) ,  "mask_img": wandb.Image(id_mask[0]) ,  "pred_img": wandb.Image(pred[0])})
+            
 
             self.id_ll=[]
             self.lnd_ll=[]
@@ -259,7 +254,7 @@ class Trainer(object):
 
     # Test
     def test(self):
-      pass
+        self.model.my_save(f'_my_save_epoch_{self.num_epoch}')
 
 
 
