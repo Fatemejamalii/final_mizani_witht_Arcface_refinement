@@ -22,7 +22,7 @@ class Trainer(object):
         self.total_ll=[]
         self.pixel_ll=[]
           #WandB
-        # wandb.init(project="celeba_with_ws_1")
+        # wandb.init(project="model_with_Arcface")
 
         self.model = model
         self.data_loader = data_loader
@@ -149,9 +149,9 @@ class Trainer(object):
             attr_out = self.model.G.attr_encoder(attr_input)
             attr_embedding = attr_out
 
-#             z_tag = tf.concat([id_embedding, attr_embedding], -1)
-#             w = self.model.G.latent_spaces_mapping(z_tag)
-#             fake_w = w[:, 0, :]
+            z_tag = tf.concat([id_embedding, attr_embedding], -1)
+            w = self.model.G.latent_spaces_mapping(z_tag)
+            fake_w = w[:, 0, :]
 #             self.logger.info(
 #                 f'w stats- mean: {tf.reduce_mean(tf.abs(fake_w)):.5f}, variance: {tf.math.reduce_variance(fake_w):.5f}')
 
@@ -159,15 +159,6 @@ class Trainer(object):
 
             # Move to roughly [0,1]
             pred = (pred + 1) / 2
-
-            utils.save_image(pred[0], self.args.images_results.joinpath(f'{self.num_epoch}_first_prediction.png'))
-            utils.save_image(self.id_mask[0], self.args.images_results.joinpath(f'first_id.png'))
-            utils.save_image(self.attr_img[0], self.args.images_results.joinpath(f'first_attr.png'))
-            utils.save_image(self.id_img[0], self.args.images_results.joinpath(f'first_gt.png'))
-            utils.save_image(pred[1], self.args.images_results.joinpath(f'{self.num_epoch}_second_prediction.png'))
-            utils.save_image(self.id_mask[1], self.args.images_results.joinpath(f'second_id.png'))
-            utils.save_image(self.attr_img[1], self.args.images_results.joinpath(f'second_attr.png'))
-            utils.save_image(self.id_img[1], self.args.images_results.joinpath(f'second_gt.png'))
 
             if use_w_d:
                 with tf.GradientTape() as w_d_tape:
