@@ -19,7 +19,7 @@ class DataLoader(object):
         self.celeba_ws_path = args.celeba_ws_path
         trian_female = self.get_celeba_items(self.celeba_path + '/female')
         train_male = self.get_celeba_items(self.celeba_path + '/male')
-	      train_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
+        train_mask = self.get_celeba_items(self.celeba_path + '/train_mask')
         trian_eyes = self.get_celeba_items(self.eye_dataset)
 	
         ws_train_male = self.get_celeba_items(self.celeba_ws_path + '/ws_celeba_male')
