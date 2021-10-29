@@ -64,6 +64,6 @@ class G(Model):
     def my_save(self, reason=''):
         self.attr_encoder.my_save(reason)
         self.latent_spaces_mapping.my_save(reason)
-        self.id_encoder.my_save(reason)
+  
 
 
