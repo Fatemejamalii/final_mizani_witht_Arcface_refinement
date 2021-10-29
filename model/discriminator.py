@@ -17,9 +17,9 @@ class W_D(Model):
         self.linear5 = layers.Dense(1, kernel_initializer=get_weights(slope))
         self.relu = layers.LeakyReLU(slope)
 
-        if self.args.load_checkpoint:
-            self.build(input_shape=(1, 1, 512))
-            self.load_weights(str(self.args.load_checkpoint.joinpath(self.__class__.__name__ + '.h5')))
+        # if self.args.load_checkpoint:
+        #     self.build(input_shape=(1, 1, 512))
+        #     self.load_weights(str(self.args.load_checkpoint.joinpath(self.__class__.__name__ + '.h5')))
 
     @tf.function
     def call(self, x):
