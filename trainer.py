@@ -67,12 +67,9 @@ class Trainer(object):
         self.lambda_landmarks = 0.001
         self.r1_gamma = 10
         
-        if self.num_epoch <1000:
-            self.lambda_id = 0.02
-            self.lambda_l_w = 0.02
-        else:
-            self.lambda_id = 1
-            self.lambda_l_w = 1
+    
+        self.lambda_id = 15
+        self.lambda_l_w = 1
             
 
         # Test
