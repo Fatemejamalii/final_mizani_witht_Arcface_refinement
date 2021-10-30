@@ -22,6 +22,8 @@ def read_image(img_path, resolution, align=False):
     return img
 
 def read_eye_image(img_path, resolution):
+    img_path = str(img_path)
+    print(img_path)
     img = cv2.imread(img_path) 
     img= cv2.resize(img,(112,112))
     img = img.astype(np.float32) / 255.
