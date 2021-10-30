@@ -23,7 +23,7 @@ def main():
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     Writer.set_writer(args.results_dir)
-
+    arc_model_path = args.arcface_checkpoints
     id_model_path = args.pretrained_models_path.joinpath('vggface2.h5')
     stylegan_G_synthesis_path = str(
         args.pretrained_models_path.joinpath(f'stylegan_G_{args.resolution}x{args.resolution}_synthesis'))
@@ -33,7 +33,7 @@ def main():
     stylegan_G_synthesis = StyleGAN_G_synthesis(resolution=args.resolution, is_const_noise=args.const_noise)
     stylegan_G_synthesis.load_weights(stylegan_G_synthesis_path)
 
-    network = Network(args, id_model_path, stylegan_G_synthesis)
+    network = Network(args, arc_model_path, id_model_path, stylegan_G_synthesis)
 
     network.test()
     inference = Inference(args, network)
