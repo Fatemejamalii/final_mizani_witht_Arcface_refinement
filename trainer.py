@@ -216,7 +216,9 @@ class Trainer(object):
             wandb.log({"epoch": self.num_epoch, "id_loss": np.mean(self.id_ll),"Lnd_loss": np.mean(self.lnd_ll),
             "l1_loss": np.mean(self.l1_ll),"pixel_loss":np.mean(self.pixel_ll),
             "total_g_not_gan_loss":np.mean(self.total_ll),"g_w_gan_loss":g_w_gan_loss,
-             "gt_img": wandb.Image(id_img[0]) ,  "mask_img": wandb.Image(id_mask[0]) ,  "pred_img": wandb.Image(pred[0])})
+             "gt_img": wandb.Image(id_img[0]) ,  "mask_img": wandb.Image(id_mask[0]) ,  "pred_img": wandb.Image(pred[0]) ,  "eye_img": wandb.Image(eye_img[0])})
+            
+            
             
 
             self.id_ll=[]
