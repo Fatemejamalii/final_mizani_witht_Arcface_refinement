@@ -47,6 +47,7 @@ class Inference(object):
         for img_name in tqdm(names):
             id_path = utils.find_file_by_str(self.args.id_dir, img_name.stem)
             mask_path = utils.find_file_by_str(self.args.mask_dir, img_name.stem)
+            eye_path = utils.find_file_by_str(self.args.eye_dir, img_name.stem)
             attr_path = utils.find_file_by_str(self.args.attr_dir, img_name.stem)
             if len(id_path) != 1 or len(attr_path) != 1:
                 print(f'Could not find a single pair with name: {img_name.stem}')
@@ -55,10 +56,11 @@ class Inference(object):
             id_img = utils.read_image(id_path[0], self.args.resolution)
             gt_img = id_img
             mask_img , attr_img = utils.read_mask_image(id_path[0], mask_path[0], self.args.resolution)
+            eye_img = utils.read_eye_image( eye_path[0], self.args.resolution)
 		
-            out_img = self.G(mask_img, attr_img, id_img)[0]
-            id_embedding = self.G(mask_img, attr_img, id_img)[1]
-            attr_embedding = self.G(mask_img, attr_img, id_img)[2]			
+            out_img = self.G(eye_img, attr_img, id_img)[0]
+            id_embedding = self.G(eye_img, attr_img, id_img)[1]
+            attr_embedding = self.G(eye_img, attr_img, id_img)[2]			
             z_tag = tf.concat([id_embedding, attr_embedding], -1)
             w = self.G.latent_spaces_mapping(z_tag)
             pred = self.G.stylegan_s(w)
