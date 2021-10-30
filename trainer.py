@@ -22,7 +22,7 @@ class Trainer(object):
         self.total_ll=[]
         self.pixel_ll=[]
           #WandB
-        wandb.init(project="model_with_Arcface")
+        wandb.init(project="model_with_Arcface_test_2")
 
         self.model = model
         self.data_loader = data_loader
@@ -68,7 +68,7 @@ class Trainer(object):
         self.r1_gamma = 10
         
     
-        self.lambda_id = 15
+        self.lambda_id = 1
         self.lambda_l_w = 1
             
 
