@@ -9,12 +9,15 @@ import pandas as pd
 from PIL import Image
 import numpy as np
 from matplotlib.image import imread 
+import cv2
+import face_alignment
 
 
 class Inference(object):
     def __init__(self, args, model):
         self.args = args
         self.G = model.G
+        self.model = model
         self.pixel_loss_func = tf.keras.losses.MeanAbsoluteError(tf.keras.losses.Reduction.SUM)
 
     def infer_pairs(self):
@@ -41,6 +44,9 @@ class Inference(object):
             
             utils.save_image(out_img, self.args.output_dir.joinpath(f'{img_name.name}'))
 
+    def landmark_detection(self,face_alignment_model, img):
+        preds = face_alignment_model.get_landmarks(img)
+    return preds
     def opt_infer_pairs(self):
         names = [f for f in self.args.id_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes]
         # names.extend([f for f in self.args.attr_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes])
@@ -57,37 +63,55 @@ class Inference(object):
             gt_img = id_img
             mask_img , attr_img = utils.read_mask_image(id_path[0], mask_path[0], self.args.resolution)
             eye_img = utils.read_eye_image( eye_path[0], self.args.resolution)
-		
-            out_img = self.G(eye_img, attr_img, id_img)[0]
-            id_embedding = self.G(eye_img, attr_img, id_img)[1]
-            attr_embedding = self.G(eye_img, attr_img, id_img)[2]			
+            
+            attr_img = eye_img
+            id_embedding = self.model.G.id_encoder(eye_img)       
+            attr_embedding = self.model.G.attr_encoder(mask_img)
+
             z_tag = tf.concat([id_embedding, attr_embedding], -1)
-            w = self.G.latent_spaces_mapping(z_tag)
-            pred = self.G.stylegan_s(w)
-            pred = (pred + 1) / 2
+            w = self.model.G.latent_spaces_mapping(z_tag)
+            pred = self.model.G.stylegan_s(w) 
+            pred = (pred + 1)  / 2 
             
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.01, beta_1 =0.9, beta_2=0.999, epsilon=1e-8 ,name='Adam')
             loss =  tf.keras.losses.MeanAbsoluteError(tf.keras.losses.Reduction.SUM)
+            arcface_loss = tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
             mask = Image.open(mask_path[0])
             mask = mask.convert('RGB')
             mask = mask.resize((256,256))
             mask = np.asarray(mask).astype(float)/255.0
-            mask1 = np.asarray(mask).astype(float)  
-            # mask1 = np.expand_dims(mask1 , axis=0) 
+            mask1 = np.asarray(mask).astype(float) 
+                              
+            img = cv2.imread(str(id_path[0])
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) 
+
+            face_alignment_model = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False)
+            landmarks = self.landmark_detection(face_alignment_model, img)
+            eyebrows_list = []
+            for k in range(17,27):
+                eyebrows_list.append(int(landmarks[0][k][1]))  
+
+
+            x_1 = min(eyebrows_list)-5
+            x_2 = int(landmarks[0][28][1])
+            y_1 = int(landmarks[0][17][0])
+            y_2 = int(landmarks[0][26][0])
+			
             loss_value = 0
             wp = tf.Variable(w ,trainable=True)
-            for i in range(5000):
+            for i in range(200):
                 print('iteration:{0}   loss value is: {1}'.format(i,loss_value))
                 with tf.GradientTape() as tape:
-                    out_img = self.G.stylegan_s(wp) 
+                    out_img = self.model.G.stylegan_s(wp) 
                     out_img = (out_img + 1)  / 2 
                     # utils.save_image(out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_out.png'))                        
                     mask_out_img = out_img * mask1
-                    if i%200==0:
-                        utils.save_image(out_img , self.args.output_dir.joinpath(f'{img_name.name[:-4]}' + '_out_{0}.png'.format(i)))
+                    if i%20==0:
+                        utils.save_image(out_img , self.args.output_dir.joinpath(f'{img_name.name[8:-4]}' + '_out_{0}.png'.format(i)))
                     # utils.save_image(mask_out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_test.png'))
                     # utils.save_image(mask_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_m.png'))
                     loss_value = loss(mask_img ,mask_out_img)
+                    eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([ , , , ]), tf.Variable([0]), (112,112))
                                         
                 grads = tape.gradient(loss_value, [wp])
                 optimizer.apply_gradients(zip(grads, [wp]))
@@ -96,9 +120,9 @@ class Inference(object):
             opt_pred = self.G.stylegan_s(wp)
             opt_pred = (opt_pred + 1) / 2
 
-            utils.save_image(pred, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_init.png'))
-            utils.save_image(opt_pred, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_final.png'))
-            utils.save_image(id_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_gt.png'))
+            utils.save_image(pred, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_init_arcface_with_perceptual_and_attr_eye.png'))
+            utils.save_image(opt_pred, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_final_arcface_with_perceptual_and_attr_eye.png'))
+            utils.save_image(id_img, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_gt.png'))
 		
     def infer_on_dirs(self):
         attr_paths = list(self.args.attr_dir.iterdir())
