@@ -111,7 +111,7 @@ class Inference(object):
                     # utils.save_image(mask_out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_test.png'))
                     # utils.save_image(mask_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_m.png'))
                     loss_value = loss(mask_img ,mask_out_img)
-                    eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([ , , , ]), tf.Variable([0]), (112,112))
+                    eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([y_1 , x_1, y_2,x_2 ]), tf.Variable([0]), (112,112))
                                         
                 grads = tape.gradient(loss_value, [wp])
                 optimizer.apply_gradients(zip(grads, [wp]))
