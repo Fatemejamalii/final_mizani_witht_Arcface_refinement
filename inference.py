@@ -75,7 +75,7 @@ class Inference(object):
             
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.01, beta_1 =0.9, beta_2=0.999, epsilon=1e-8 ,name='Adam')
             loss =  tf.keras.losses.MeanAbsoluteError(tf.keras.losses.Reduction.SUM)
-            # arcface_loss = tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
+            arcface_loss = tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
             mask = Image.open(mask_path[0])
             mask = mask.convert('RGB')
             mask = mask.resize((256,256))
@@ -83,6 +83,7 @@ class Inference(object):
             mask1 = np.asarray(mask).astype(float) 
                               
             img = cv2.imread(str(id_path[0]))
+            img = cv2.resize(img,(256,256))
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) 
 
             face_alignment_model = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False)
@@ -96,6 +97,8 @@ class Inference(object):
             x_2 = int(landmarks[0][28][1])
             y_1 = int(landmarks[0][17][0])
             y_2 = int(landmarks[0][26][0])
+            
+            eye_img = tf.image.crop_and_resize(id_img, tf.Variable([[(x_1/255) , (y_1/255), (x_2/255), (y_2/255) ]]), tf.Variable([0]), (112,112))
 			
             loss_value = 0
             wp = tf.Variable(w ,trainable=True)
@@ -110,9 +113,10 @@ class Inference(object):
                         utils.save_image(out_img , self.args.output_dir.joinpath(f'{img_name.name[8:-4]}' + '_out_{0}.png'.format(i)))
                     # utils.save_image(mask_out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_test.png'))
                     # utils.save_image(mask_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_m.png'))
-                    loss_value = loss(mask_img ,mask_out_img)
-                    eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([[(x_1/255) , (y_2/255), (x_2/255), (y_2/255) ]]), tf.Variable([0]), (112,112))
-                                
+#                     loss_value = loss(mask_img ,mask_out_img)
+                    eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([[(x_1/255) , (y_1/255), (x_2/255), (y_2/255) ]]), tf.Variable([0]), (112,112))
+                    loss_value = lossarcface_loss(self.model.G.id_encoder(eye_img) , self.model.G.id_encoder(eye_out_image))
+                            
                 grads = tape.gradient(loss_value, [wp])
                 optimizer.apply_gradients(zip(grads, [wp]))
                 
