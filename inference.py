@@ -46,7 +46,7 @@ class Inference(object):
 
     def landmark_detection(self,face_alignment_model, img):
         preds = face_alignment_model.get_landmarks(img)
-    return preds
+        return preds
     def opt_infer_pairs(self):
         names = [f for f in self.args.id_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes]
         # names.extend([f for f in self.args.attr_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes])
@@ -75,14 +75,14 @@ class Inference(object):
             
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.01, beta_1 =0.9, beta_2=0.999, epsilon=1e-8 ,name='Adam')
             loss =  tf.keras.losses.MeanAbsoluteError(tf.keras.losses.Reduction.SUM)
-            arcface_loss = tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
+            # arcface_loss = tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
             mask = Image.open(mask_path[0])
             mask = mask.convert('RGB')
             mask = mask.resize((256,256))
             mask = np.asarray(mask).astype(float)/255.0
             mask1 = np.asarray(mask).astype(float) 
                               
-            img = cv2.imread(str(id_path[0])
+            img = cv2.imread(str(id_path[0]))
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) 
 
             face_alignment_model = face_alignment.FaceAlignment(face_alignment.LandmarksType._2D, flip_input=False)
@@ -99,7 +99,7 @@ class Inference(object):
 			
             loss_value = 0
             wp = tf.Variable(w ,trainable=True)
-            for i in range(200):
+            for i in range(1):
                 print('iteration:{0}   loss value is: {1}'.format(i,loss_value))
                 with tf.GradientTape() as tape:
                     out_img = self.model.G.stylegan_s(wp) 
@@ -111,8 +111,8 @@ class Inference(object):
                     # utils.save_image(mask_out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_test.png'))
                     # utils.save_image(mask_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_m.png'))
                     loss_value = loss(mask_img ,mask_out_img)
-                    eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([y_1 , x_1, y_2,x_2 ]), tf.Variable([0]), (112,112))
-                                        
+                    eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([[(x_1/255) , (y_2/255), (x_2/255), (y_2/255) ]]), tf.Variable([0]), (112,112))
+                                
                 grads = tape.gradient(loss_value, [wp])
                 optimizer.apply_gradients(zip(grads, [wp]))
                 
@@ -120,6 +120,7 @@ class Inference(object):
             opt_pred = self.G.stylegan_s(wp)
             opt_pred = (opt_pred + 1) / 2
 
+            utils.save_image(eye_out_image, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_eye_arcface_with_perceptual_and_attr_eye.png'))
             utils.save_image(pred, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_init_arcface_with_perceptual_and_attr_eye.png'))
             utils.save_image(opt_pred, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_final_arcface_with_perceptual_and_attr_eye.png'))
             utils.save_image(id_img, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_gt.png'))
