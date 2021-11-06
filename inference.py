@@ -49,8 +49,8 @@ class Inference(object):
         return preds
     def opt_infer_pairs(self):
         names = [f for f in self.args.id_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes]
-        # names.extend([f for f in self.args.attr_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes])
         for img_name in tqdm(names):
+            print(img_name.name)
             id_path = utils.find_file_by_str(self.args.id_dir, img_name.stem)
             mask_path = utils.find_file_by_str(self.args.mask_dir, img_name.stem)
             eye_path = utils.find_file_by_str(self.args.eye_dir, img_name.stem)
@@ -75,7 +75,7 @@ class Inference(object):
             
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.01, beta_1 =0.9, beta_2=0.999, epsilon=1e-8 ,name='Adam')
             loss =  tf.keras.losses.MeanAbsoluteError(tf.keras.losses.Reduction.SUM)
-            arcface_loss = tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
+            arcface_loss =lambda y_gt, y_pred: tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
             mask = Image.open(mask_path[0])
             mask = mask.convert('RGB')
             mask = mask.resize((256,256))
@@ -102,21 +102,22 @@ class Inference(object):
 			
             loss_value = 0
             wp = tf.Variable(w ,trainable=True)
-            for i in range(1):
-                print('iteration:{0}   loss value is: {1}'.format(i,loss_value))
+            for i in range(100):
+                
                 with tf.GradientTape() as tape:
                     out_img = self.model.G.stylegan_s(wp) 
                     out_img = (out_img + 1)  / 2 
                     # utils.save_image(out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_out.png'))                        
                     mask_out_img = out_img * mask1
-                    if i%20==0:
-                        utils.save_image(out_img , self.args.output_dir.joinpath(f'{img_name.name[8:-4]}' + '_out_{0}.png'.format(i)))
+                    # if i%10==0 and i != 0:
+                    #     print('iteration:{0}   loss value is: {1}'.format(i,loss_value))
+                    #     utils.save_image(out_img , self.args.output_dir.joinpath(f'{img_name.name[:-4]}' + '_out_{0}.png'.format(i)))
                     # utils.save_image(mask_out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_test.png'))
                     # utils.save_image(mask_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_m.png'))
-#                     loss_value = loss(mask_img ,mask_out_img)
+                    loss_value_1 = loss(mask_img ,mask_out_img)
                     eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([[(x_1/255) , (y_1/255), (x_2/255), (y_2/255) ]]), tf.Variable([0]), (112,112))
-                    loss_value = lossarcface_loss(self.model.G.id_encoder(eye_img) , self.model.G.id_encoder(eye_out_image))
-                            
+                    loss_value_2 = arcface_loss(self.model.G.id_encoder(eye_img) , self.model.G.id_encoder(eye_out_image))
+                    loss_value = loss_value_1 + 5*loss_value_2
                 grads = tape.gradient(loss_value, [wp])
                 optimizer.apply_gradients(zip(grads, [wp]))
                 
@@ -124,10 +125,10 @@ class Inference(object):
             opt_pred = self.G.stylegan_s(wp)
             opt_pred = (opt_pred + 1) / 2
 
-            utils.save_image(eye_out_image, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_eye_arcface_with_perceptual_and_attr_eye.png'))
-            utils.save_image(pred, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_init_arcface_with_perceptual_and_attr_eye.png'))
-            utils.save_image(opt_pred, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_final_arcface_with_perceptual_and_attr_eye.png'))
-            utils.save_image(id_img, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_gt.png'))
+            # utils.save_image(eye_out_image, self.args.output_dir.joinpath(f'{img_name.name[8:-4]}'+'_eye_arcface_with_perceptual_and_attr_eye.png'))
+            utils.save_image(pred, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_init.png'))
+            utils.save_image(opt_pred, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_final.png'))
+            utils.save_image(id_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_gt.png'))
 		
     def infer_on_dirs(self):
         attr_paths = list(self.args.attr_dir.iterdir())
