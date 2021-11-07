@@ -106,7 +106,7 @@ class Inference(object):
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.01, beta_1 =0.9, beta_2=0.999, epsilon=1e-8 ,name='Adam')
             loss =  tf.keras.losses.MeanAbsoluteError(tf.keras.losses.Reduction.SUM)
             arcface_loss =lambda y_gt, y_pred: tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
-            perceptual_loss =lambda y_gt, y_pred: 0.01 * perc_style_loss(y_gt,y_pred,self.perceptual_model)
+            perceptual_loss =lambda y_gt, y_pred: 0.01 * self.perc_style_loss(y_gt,y_pred,self.perceptual_model)
             mask = Image.open(mask_path[0])
             mask = mask.convert('RGB')
             mask = mask.resize((256,256))
