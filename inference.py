@@ -11,6 +11,7 @@ import numpy as np
 from matplotlib.image import imread 
 import cv2
 import face_alignment
+from tensorflow import keras
 
 
 class Inference(object):
@@ -19,7 +20,36 @@ class Inference(object):
         self.G = model.G
         self.model = model
         self.pixel_loss_func = tf.keras.losses.MeanAbsoluteError(tf.keras.losses.Reduction.SUM)
+        self.vgg19_model = keras.applications.VGG19(include_top=False,input_shape=(256,256,3))
+        self.perceptual_model = self.perc_model(self.vgg19_model)
 
+    def perc_model (self,vgg_model):
+        output1 = vgg_model.layers[1].output
+        output2 = vgg_model.layers[4].output
+        output3 = vgg_model.layers[7].output
+        output4 = vgg_model.layers[12].output
+        output5 = vgg_model.layers[17].output
+        perceptual_model = keras.Model(inputs=vgg_model.input,outputs=[output1,output2,output3,output4,output5])
+        return perceptual_model
+
+
+    def perc_style_loss(self,image: tf.Tensor, output: tf.Tensor,perceptual_model: tf.keras.Model) -> tf.Tensor:
+        image_v = keras.applications.vgg19.preprocess_input(image*255.0)
+        output_v = keras.applications.vgg19.preprocess_input(output*255.0)
+
+        output_f1, output_f2, output_f3, output_f4, output_f5 = perceptual_model(output_v) 
+        image_f1, image_f2, image_f3, image_f4, image_f5 = perceptual_model(image_v)
+
+        perc_f1 = tf.reduce_mean(tf.reduce_mean(tf.abs(image_f1-output_f1),axis=(1,2,3)))
+        perc_f2 = tf.reduce_mean(tf.reduce_mean(tf.abs(image_f2-output_f2),axis=(1,2,3)))
+        perc_f3 = tf.reduce_mean(tf.reduce_mean(tf.abs(image_f3-output_f3),axis=(1,2,3)))
+        perc_f4 = tf.reduce_mean(tf.reduce_mean(tf.abs(image_f4-output_f4),axis=(1,2,3)))
+        perc_f5 = tf.reduce_mean(tf.reduce_mean(tf.abs(image_f5-output_f5),axis=(1,2,3)))
+        perceptual_loss = perc_f1 + perc_f2 + perc_f3 + perc_f4 + perc_f5
+        # perceptual_loss /= 5 
+        
+        return perceptual_loss
+    
     def infer_pairs(self):
         names = [f for f in self.args.id_dir.iterdir() if f.suffix[1:] in self.args.img_suffixes]
         for img_name in tqdm(names):
@@ -76,6 +106,7 @@ class Inference(object):
             optimizer = tf.keras.optimizers.Adam(learning_rate=0.01, beta_1 =0.9, beta_2=0.999, epsilon=1e-8 ,name='Adam')
             loss =  tf.keras.losses.MeanAbsoluteError(tf.keras.losses.Reduction.SUM)
             arcface_loss =lambda y_gt, y_pred: tf.reduce_mean(tf.keras.losses.MAE(y_gt, y_pred))
+            perceptual_loss =lambda y_gt, y_pred: 0.01 * perc_style_loss(y_gt,y_pred,self.perceptual_model)
             mask = Image.open(mask_path[0])
             mask = mask.convert('RGB')
             mask = mask.resize((256,256))
@@ -103,21 +134,17 @@ class Inference(object):
             loss_value = 0
             wp = tf.Variable(w ,trainable=True)
             for i in range(100):
-                
                 with tf.GradientTape() as tape:
                     out_img = self.model.G.stylegan_s(wp) 
                     out_img = (out_img + 1)  / 2 
-                    # utils.save_image(out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_out.png'))                        
                     mask_out_img = out_img * mask1
-                    # if i%10==0 and i != 0:
-                    #     print('iteration:{0}   loss value is: {1}'.format(i,loss_value))
-                    #     utils.save_image(out_img , self.args.output_dir.joinpath(f'{img_name.name[:-4]}' + '_out_{0}.png'.format(i)))
-                    # utils.save_image(mask_out_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_test.png'))
-                    # utils.save_image(mask_img, self.args.output_dir.joinpath(f'{img_name.name[:-4]}'+'_m.png'))
-                    loss_value_1 = loss(mask_img ,mask_out_img)
                     eye_out_image = tf.image.crop_and_resize(out_img, tf.Variable([[(x_1/255) , (y_1/255), (x_2/255), (y_2/255) ]]), tf.Variable([0]), (112,112))
+                    
+                    loss_value_1 = loss(mask_img ,mask_out_img)
                     loss_value_2 = arcface_loss(self.model.G.id_encoder(eye_img) , self.model.G.id_encoder(eye_out_image))
-                    loss_value = loss_value_1 + 5*loss_value_2
+                    loss_value_3 = perceptual_loss(eye_img ,eye_out_image)
+                    loss_value = loss_value_3 
+                    
                 grads = tape.gradient(loss_value, [wp])
                 optimizer.apply_gradients(zip(grads, [wp]))
                 
