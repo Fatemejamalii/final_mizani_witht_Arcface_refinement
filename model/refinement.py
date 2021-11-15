@@ -1,5 +1,5 @@
 
-from modules import gated_conv2d, IGRB, CSAB, SPD, SPD_4, Self_attention
+from requirements import gated_conv2d, IGRB, CSAB, SPD, SPD_4, Self_attention
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.layers import *
